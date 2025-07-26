@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive OSI Model - Learn Through Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00ff88, #00ddff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.5)); }
+            to { filter: drop-shadow(0 0 20px rgba(0, 221, 255, 0.8)); }
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #a8a8a8;
+            margin-bottom: 50px;
+        }
+
+        .osi-container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .layers-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 300px;
+        }
+
+        .layer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layer::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff88, #00ddff, #ff0088);
+            border-radius: 15px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .layer:hover {
+            transform: translateX(-10px) scale(1.02);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .layer.active {
+            transform: translateX(-20px) scale(1.05);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.3);
+        }
+
+        .layer.active::before {
+            opacity: 1;
+        }
+
+        .layer-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-right: 15px;
+            display: inline-block;
+        }
+
+        .layer-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .layer-brief {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        .details-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            min-width: 600px;
+            max-width: 600px;
+            min-height: 500px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .details-panel h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #00ddff;
+        }
+
+        .details-panel h3 {
+            font-size: 1.2rem;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            color: #00ff88;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .detail-section li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .detail-section li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+            font-size: 1.2rem;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .intro {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            margin: 0 auto;
+            max-width: 800px;
+        }
+
+        .intro h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #00ddff;
+        }
+
+        .intro p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #ccc;
+        }
+
+        @media (max-width: 1024px) {
+            .osi-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .details-panel {
+                min-width: auto;
+                max-width: 100%;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive OSI Model</h1>
+        <p class="subtitle">Click on each layer to explore testing methods and tools</p>
+
+        <div class="osi-container">
+            <div class="layers-stack">
+                <div class="layer" data-layer="7">
+                    <span class="layer-number">7</span>
+                    <span class="layer-name">Application</span>
+                    <div class="layer-brief">HTTP, FTP, SSH, DNS</div>
+                </div>
+                <div class="layer" data-layer="6">
+                    <span class="layer-number">6</span>
+                    <span class="layer-name">Presentation</span>
+                    <div class="layer-brief">SSL/TLS, Compression, Encryption</div>
+                </div>
+                <div class="layer" data-layer="5">
+                    <span class="layer-number">5</span>
+                    <span class="layer-name">Session</span>
+                    <div class="layer-brief">NetBIOS, SQL, RPC</div>
+                </div>
+                <div class="layer" data-layer="4">
+                    <span class="layer-number">4</span>
+                    <span class="layer-name">Transport</span>
+                    <div class="layer-brief">TCP, UDP, Ports</div>
+                </div>
+                <div class="layer" data-layer="3">
+                    <span class="layer-number">3</span>
+                    <span class="layer-name">Network</span>
+                    <div class="layer-brief">IP, ICMP, Routing</div>
+                </div>
+                <div class="layer" data-layer="2">
+                    <span class="layer-number">2</span>
+                    <span class="layer-name">Data Link</span>
+                    <div class="layer-brief">Ethernet, Switches, MAC</div>
+                </div>
+                <div class="layer" data-layer="1">
+                    <span class="layer-number">1</span>
+                    <span class="layer-name">Physical</span>
+                    <div class="layer-brief">Cables, Hubs, Signals</div>
+                </div>
+            </div>
+
+            <div id="detailsPanel" class="details-panel">
+                <div class="intro">
+                    <h2>Welcome to the Interactive OSI Model</h2>
+                    <p>The OSI (Open Systems Interconnection) model is a conceptual framework that describes how data moves through a network. Each layer has specific responsibilities and can be tested using various tools and techniques.</p>
+                    <p style="margin-top: 20px;"><strong>Click on any layer</strong> to explore its functions, protocols, and hands-on testing methods!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const layerDetails = {
+            7: {
+                name: "Application Layer",
+                description: "The layer closest to the end user, providing network services directly to applications.",
+                functions: [
+                    "Network process to application",
+                    "Network services to applications",
+                    "User authentication",
+                    "Data generation"
+                ],
+                protocols: [
+                    "HTTP/HTTPS - Web browsing",
+                    "FTP/SFTP - File transfer",
+                    "SSH - Secure shell",
+                    "DNS - Domain name resolution",
+                    "SMTP/POP3/IMAP - Email"
+                ],
+                tools: [
+                    "cURL - Test HTTP/HTTPS endpoints",
+                    "Postman - API testing",
+                    "dig/nslookup - DNS testing",
+                    "Browser DevTools - Web debugging",
+                    "telnet - Protocol testing"
+                ],
+                testExamples: [
+                    {
+                        title: "Test HTTP Response",
+                        code: "curl -v https://api.github.com/users/octocat"
+                    },
+                    {
+                        title: "DNS Lookup",
+                        code: "dig google.com\nnslookup google.com"
+                    },
+                    {
+                        title: "Test SMTP Server",
+                        code: "telnet mail.server.com 25"
+                    }
+                ],
+                issues: [
+                    "Service unavailable (404, 503 errors)",
+                    "DNS resolution failures",
+                    "Authentication problems",
+                    "Slow application response"
+                ]
+            },
+            6: {
+                name: "Presentation Layer",
+                description: "Handles data formatting, encryption, and compression for the application layer.",
+                functions: [
+                    "Data encryption/decryption",
+                    "Data compression/decompression",
+                    "Character encoding",
+                    "Data format conversion"
+                ],
+                protocols: [
+                    "SSL/TLS - Secure communications",
+                    "JPEG, GIF, PNG - Image formats",
+                    "ASCII, Unicode - Character encoding",
+                    "MPEG, AVI - Video formats"
+                ],
+                tools: [
+                    "OpenSSL - SSL/TLS testing",
+                    "Wireshark - Protocol analysis",
+                    "SSLyze - SSL configuration scanner",
+                    "testssl.sh - SSL/TLS tester"
+                ],
+                testExamples: [
+                    {
+                        title: "Test SSL/TLS Connection",
+                        code: "openssl s_client -connect google.com:443 -showcerts"
+                    },
+                    {
+                        title: "Check Supported Ciphers",
+                        code: "nmap --script ssl-enum-ciphers -p 443 google.com"
+                    }
+                ],
+                issues: [
+                    "SSL certificate errors",
+                    "Cipher mismatch",
+                    "Compression failures",
+                    "Encoding problems"
+                ]
+            },
+            5: {
+                name: "Session Layer",
+                description: "Manages sessions between applications, handling setup, coordination, and termination.",
+                functions: [
+                    "Session establishment",
+                    "Session maintenance",
+                    "Session termination",
+                    "Dialog control",
+                    "Session synchronization"
+                ],
+                protocols: [
+                    "NetBIOS - Network basic I/O system",
+                    "SQL - Database sessions",
+                    "RPC - Remote procedure calls",
+                    "NFS - Network file system"
+                ],
+                tools: [
+                    "netstat - Session monitoring",
+                    "ss - Socket statistics",
+                    "MySQL client - Database sessions",
+                    "rpcdump - RPC enumeration"
+                ],
+                testExamples: [
+                    {
+                        title: "View Active Sessions",
+                        code: "netstat -an | grep ESTABLISHED"
+                    },
+                    {
+                        title: "Monitor Database Connections",
+                        code: "SHOW PROCESSLIST; -- MySQL"
+                    }
+                ],
+                issues: [
+                    "Session timeouts",
+                    "Connection drops",
+                    "Session hijacking",
+                    "Synchronization problems"
+                ]
+            },
+            4: {
+                name: "Transport Layer",
+                description: "Provides reliable end-to-end message delivery and error recovery.",
+                functions: [
+                    "Segmentation and reassembly",
+                    "Connection management",
+                    "Flow control",
+                    "Error detection and recovery",
+                    "Port addressing"
+                ],
+                protocols: [
+                    "TCP - Transmission Control Protocol",
+                    "UDP - User Datagram Protocol",
+                    "Port numbers (0-65535)",
+                    "Socket programming"
+                ],
+                tools: [
+                    "netstat/ss - Connection viewing",
+                    "nmap - Port scanning",
+                    "netcat - Port testing",
+                    "tcpdump - Packet capture",
+                    "iperf - Throughput testing"
+                ],
+                testExamples: [
+                    {
+                        title: "Scan for Open Ports",
+                        code: "nmap -p 1-1000 192.168.1.1"
+                    },
+                    {
+                        title: "Test Specific Port",
+                        code: "nc -zv google.com 443"
+                    },
+                    {
+                        title: "View Listening Ports",
+                        code: "netstat -tuln\nss -tuln  # Modern Linux"
+                    }
+                ],
+                issues: [
+                    "Port blocking",
+                    "Connection refused",
+                    "Packet loss",
+                    "Congestion",
+                    "Out-of-order delivery"
+                ]
+            },
+            3: {
+                name: "Network Layer",
+                description: "Handles routing of data packets between networks using logical addressing.",
+                functions: [
+                    "Logical addressing (IP)",
+                    "Routing",
+                    "Path determination",
+                    "Traffic control",
+                    "Packet fragmentation"
+                ],
+                protocols: [
+                    "IPv4/IPv6 - Internet Protocol",
+                    "ICMP - Internet Control Message Protocol",
+                    "OSPF, BGP - Routing protocols",
+                    "IPSec - Security protocol"
+                ],
+                tools: [
+                    "ping - Connectivity testing",
+                    "traceroute - Path discovery",
+                    "ip/route - Routing tables",
+                    "mtr - Combined ping/traceroute",
+                    "tcpdump - Packet analysis"
+                ],
+                testExamples: [
+                    {
+                        title: "Test Connectivity",
+                        code: "ping -c 5 8.8.8.8"
+                    },
+                    {
+                        title: "Trace Route Path",
+                        code: "traceroute google.com\ntracert google.com  # Windows"
+                    },
+                    {
+                        title: "View Routing Table",
+                        code: "ip route show\nroute -n  # Legacy"
+                    }
+                ],
+                issues: [
+                    "No route to host",
+                    "Routing loops",
+                    "MTU problems",
+                    "IP conflicts",
+                    "Subnet misconfiguration"
+                ]
+            },
+            2: {
+                name: "Data Link Layer",
+                description: "Provides node-to-node data transfer and handles error correction from the physical layer.",
+                functions: [
+                    "Frame formatting",
+                    "Physical addressing (MAC)",
+                    "Error detection (CRC)",
+                    "Flow control",
+                    "Access control"
+                ],
+                protocols: [
+                    "Ethernet - Most common LAN protocol",
+                    "Wi-Fi (802.11) - Wireless",
+                    "PPP - Point-to-Point Protocol",
+                    "STP - Spanning Tree Protocol",
+                    "VLAN - Virtual LANs"
+                ],
+                tools: [
+                    "Wireshark - Frame analysis",
+                    "arp - ARP table viewing",
+                    "bridge - Bridge management",
+                    "tcpdump - Packet capture",
+                    "ip link - Interface management"
+                ],
+                testExamples: [
+                    {
+                        title: "View ARP Table",
+                        code: "arp -a\nip neighbor show  # Modern Linux"
+                    },
+                    {
+                        title: "Monitor ARP Traffic",
+                        code: "tcpdump -i eth0 arp"
+                    },
+                    {
+                        title: "View MAC Address",
+                        code: "ip link show\nifconfig  # Legacy"
+                    }
+                ],
+                issues: [
+                    "Broadcast storms",
+                    "Switching loops",
+                    "MAC flooding",
+                    "VLAN misconfiguration",
+                    "Duplex mismatch"
+                ]
+            },
+            1: {
+                name: "Physical Layer",
+                description: "Handles the transmission of raw bits over physical media.",
+                functions: [
+                    "Bit transmission",
+                    "Physical topology",
+                    "Electrical signals",
+                    "Hardware specifications",
+                    "Connector types"
+                ],
+                protocols: [
+                    "Ethernet standards (10/100/1000)",
+                    "USB specifications",
+                    "Bluetooth physical layer",
+                    "Fiber optic standards",
+                    "RS-232 serial"
+                ],
+                tools: [
+                    "Cable tester - Continuity testing",
+                    "ethtool - Interface statistics",
+                    "TDR - Cable fault location",
+                    "Multimeter - Voltage testing",
+                    "Link lights - Visual indicators"
+                ],
+                testExamples: [
+                    {
+                        title: "Check Link Status",
+                        code: "ethtool eth0"
+                    },
+                    {
+                        title: "View Interface Stats",
+                        code: "ethtool -S eth0"
+                    },
+                    {
+                        title: "Test Cable Speed",
+                        code: "mii-tool -v eth0"
+                    }
+                ],
+                issues: [
+                    "Cable damage",
+                    "Connector problems",
+                    "EMI interference",
+                    "Distance limitations",
+                    "Power issues"
+                ]
+            }
+        };
+
+        function renderLayerDetails(layerNum) {
+            const details = layerDetails[layerNum];
+            const panel = document.getElementById('detailsPanel');
+            
+            let html = `
+                <h2>Layer ${layerNum}: ${details.name}</h2>
+                <p style="margin-bottom: 20px; color: #ccc;">${details.description}</p>
+                
+                <div class="detail-section">
+                    <h3>🎯 Primary Functions</h3>
+                    <ul>
+                        ${details.functions.map(f => `<li>${f}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📡 Common Protocols</h3>
+                    <ul>
+                        ${details.protocols.map(p => `<li>${p}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="detail-section">
+                    <h3>🔧 Testing Tools</h3>
+                    <ul>
+                        ${details.tools.map(t => `<li>${t}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="detail-section">
+                    <h3>💻 Test Examples</h3>
+                    ${details.testExamples.map(ex => `
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #00ff88;">${ex.title}</strong>
+                            <div class="code-block">${ex.code}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="detail-section">
+                    <h3>⚠️ Common Issues</h3>
+                    <ul>
+                        ${details.issues.map(i => `<li>${i}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            
+            panel.innerHTML = html;
+            panel.classList.remove('pulse');
+            void panel.offsetWidth; // Trigger reflow
+            panel.classList.add('pulse');
+        }
+
+        // Add click handlers to layers
+        document.querySelectorAll('.layer').forEach(layer => {
+            layer.addEventListener('click', function() {
+                // Remove active class from all layers
+                document.querySelectorAll('.layer').forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked layer
+                this.classList.add('active');
+                
+                // Render details
+                const layerNum = parseInt(this.dataset.layer);
+                renderLayerDetails(layerNum);
+            });
+        });
+
+        // Keyboard navigation
+        let currentLayer = null;
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '7') {
+                const layer = document.querySelector(`[data-layer="${e.key}"]`);
+                if (layer) {
+                    layer.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
