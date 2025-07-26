@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSI Model Data Flow</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .flow-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .stack {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .stack-title {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .layer {
+            position: relative;
+            margin: 10px 0;
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.5s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid transparent;
+        }
+
+        .layer:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .layer.active {
+            border-color: #f39c12;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.3);
+        }
+
+        .layer.processed {
+            opacity: 0.7;
+            background: linear-gradient(45deg, #27ae60, #2ecc71) !important;
+            color: white;
+        }
+
+        .layer-number {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #e74c3c;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .layer-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            margin-left: 40px;
+        }
+
+        .layer-description {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-left: 40px;
+        }
+
+        .data-representation {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border-left: 4px solid #3498db;
+        }
+
+        .data-unit {
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 5px;
+        }
+
+        .arrow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            color: #3498db;
+            animation: pulse 2s infinite;
+            margin: 20px 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .arrow.down::before {
+            content: "⬇";
+        }
+
+        .arrow.right::before {
+            content: "➡";
+        }
+
+        .arrow.up::before {
+            content: "⬆";
+        }
+
+        .network-wire {
+            flex: 0 0 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(90deg, #34495e, #2c3e50);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .network-wire::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: network-flow 3s infinite;
+        }
+
+        @keyframes network-flow {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .wire-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .wire-description {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 3px;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 5px solid #3498db;
+        }
+
+        .info-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        /* Layer-specific colors */
+        .layer-7 { background: linear-gradient(45deg, #e74c3c, #c0392b); color: white; }
+        .layer-6 { background: linear-gradient(45deg, #e67e22, #d35400); color: white; }
+        .layer-5 { background: linear-gradient(45deg, #f39c12, #e67e22); color: white; }
+        .layer-4 { background: linear-gradient(45deg, #2ecc71, #27ae60); color: white; }
+        .layer-3 { background: linear-gradient(45deg, #3498db, #2980b9); color: white; }
+        .layer-2 { background: linear-gradient(45deg, #9b59b6, #8e44ad); color: white; }
+        .layer-1 { background: linear-gradient(45deg, #34495e, #2c3e50); color: white; }
+
+        @media (max-width: 768px) {
+            .flow-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .network-wire {
+                flex: none;
+                order: 2;
+            }
+            
+            .arrow.right::before {
+                content: "⬇";
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OSI Model Data Flow Visualization</h1>
+        
+        <div class="controls">
+            <button class="btn" onclick="startAnimation()">Start Data Flow</button>
+            <button class="btn" onclick="resetAnimation()">Reset</button>
+            <button class="btn" onclick="stepThrough()">Step Through</button>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="flow-container">
+            <!-- Sender Stack -->
+            <div class="stack">
+                <div class="stack-title">Sender (Data Encapsulation)</div>
+                
+                <div class="layer layer-7" id="sender-7" onclick="showLayerInfo(7, 'sender')">
+                    <div class="layer-number">7</div>
+                    <div class="layer-name">Application Layer</div>
+                    <div class="layer-description">HTTP Request, Email, File Transfer</div>
+                    <div class="data-representation" id="sender-data-7">
+                        <div class="data-unit">Data Unit: Data</div>
+                        <div>GET /index.html HTTP/1.1</div>
+                    </div>
+                </div>
+
+                <div class="arrow down"></div>
+
+                <div class="layer layer-6" id="sender-6" onclick="showLayerInfo(6, 'sender')">
+                    <div class="layer-number">6</div>
+                    <div class="layer-name">Presentation Layer</div>
+                    <div class="layer-description">Encryption, Compression, Format</div>
+                    <div class="data-representation" id="sender-data-6">
+                        <div class="data-unit">Data Unit: Data</div>
+                        <div>[Encrypted/Compressed Data]</div>
+                    </div>
+                </div>
+
+                <div class="arrow down"></div>
+
+                <div class="layer layer-5" id="sender-5" onclick="showLayerInfo(5, 'sender')">
+                    <div class="layer-number">5</div>
+                    <div class="layer-name">Session Layer</div>
+                    <div class="layer-description">Session Management, Authentication</div>
+                    <div class="data-representation" id="sender-data-5">
+                        <div class="data-unit">Data Unit: Data</div>
+                        <div>[Session Headers + Data]</div>
+                    </div>
+                </div>
+
+                <div class="arrow down"></div>
+
+                <div class="layer layer-4" id="sender-4" onclick="showLayerInfo(4, 'sender')">
+                    <div class="layer-number">4</div>
+                    <div class="layer-name">Transport Layer</div>
+                    <div class="layer-description">TCP/UDP Headers, Port Numbers</div>
+                    <div class="data-representation" id="sender-data-4">
+                        <div class="data-unit">Data Unit: Segment</div>
+                        <div>[TCP Header | Data]</div>
+                        <div>Src Port: 54321, Dst Port: 80</div>
+                    </div>
+                </div>
+
+                <div class="arrow down"></div>
+
+                <div class="layer layer-3" id="sender-3" onclick="showLayerInfo(3, 'sender')">
+                    <div class="layer-number">3</div>
+                    <div class="layer-name">Network Layer</div>
+                    <div class="layer-description">IP Headers, Routing</div>
+                    <div class="data-representation" id="sender-data-3">
+                        <div class="data-unit">Data Unit: Packet</div>
+                        <div>[IP Header | TCP Header | Data]</div>
+                        <div>Src IP: 192.168.1.10, Dst IP: 8.8.8.8</div>
+                    </div>
+                </div>
+
+                <div class="arrow down"></div>
+
+                <div class="layer layer-2" id="sender-2" onclick="showLayerInfo(2, 'sender')">
+                    <div class="layer-number">2</div>
+                    <div class="layer-name">Data Link Layer</div>
+                    <div class="layer-description">Ethernet Headers, MAC Addresses</div>
+                    <div class="data-representation" id="sender-data-2">
+                        <div class="data-unit">Data Unit: Frame</div>
+                        <div>[Eth Header | IP Header | TCP Header | Data | FCS]</div>
+                        <div>Src MAC: AA:BB:CC:DD:EE:FF</div>
+                    </div>
+                </div>
+
+                <div class="arrow down"></div>
+
+                <div class="layer layer-1" id="sender-1" onclick="showLayerInfo(1, 'sender')">
+                    <div class="layer-number">1</div>
+                    <div class="layer-name">Physical Layer</div>
+                    <div class="layer-description">Electrical Signals, Cables</div>
+                    <div class="data-representation" id="sender-data-1">
+                        <div class="data-unit">Data Unit: Bits</div>
+                        <div>10110100101011010010...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Medium -->
+            <div class="network-wire" id="networkWire">
+                <div class="wire-title">🌐 Network Medium</div>
+                <div class="wire-description">
+                    Ethernet Cable<br>
+                    Fiber Optic<br>
+                    Wireless<br>
+                    Internet
+                </div>
+                <div style="margin-top: 20px; font-size: 2em;">
+                    <span id="transmissionIndicator">📡</span>
+                </div>
+            </div>
+
+            <!-- Receiver Stack -->
+            <div class="stack">
+                <div class="stack-title">Receiver (Data Decapsulation)</div>
+                
+                <div class="layer layer-1" id="receiver-1" onclick="showLayerInfo(1, 'receiver')">
+                    <div class="layer-number">1</div>
+                    <div class="layer-name">Physical Layer</div>
+                    <div class="layer-description">Signal Reception, Bit Recovery</div>
+                    <div class="data-representation" id="receiver-data-1">
+                        <div class="data-unit">Data Unit: Bits</div>
+                        <div>10110100101011010010...</div>
+                    </div>
+                </div>
+
+                <div class="arrow up"></div>
+
+                <div class="layer layer-2" id="receiver-2" onclick="showLayerInfo(2, 'receiver')">
+                    <div class="layer-number">2</div>
+                    <div class="layer-name">Data Link Layer</div>
+                    <div class="layer-description">Frame Processing, Error Check</div>
+                    <div class="data-representation" id="receiver-data-2">
+                        <div class="data-unit">Data Unit: Frame</div>
+                        <div>[Remove Eth Header & FCS]</div>
+                        <div>Check MAC Address Match</div>
+                    </div>
+                </div>
+
+                <div class="arrow up"></div>
+
+                <div class="layer layer-3" id="receiver-3" onclick="showLayerInfo(3, 'receiver')">
+                    <div class="layer-number">3</div>
+                    <div class="layer-name">Network Layer</div>
+                    <div class="layer-description">IP Processing, Routing Decision</div>
+                    <div class="data-representation" id="receiver-data-3">
+                        <div class="data-unit">Data Unit: Packet</div>
+                        <div>[Remove IP Header]</div>
+                        <div>Check Destination IP</div>
+                    </div>
+                </div>
+
+                <div class="arrow up"></div>
+
+                <div class="layer layer-4" id="receiver-4" onclick="showLayerInfo(4, 'receiver')">
+                    <div class="layer-number">4</div>
+                    <div class="layer-name">Transport Layer</div>
+                    <div class="layer-description">TCP Processing, Port Delivery</div>
+                    <div class="data-representation" id="receiver-data-4">
+                        <div class="data-unit">Data Unit: Segment</div>
+                        <div>[Remove TCP Header]</div>
+                        <div>Deliver to Port 80</div>
+                    </div>
+                </div>
+
+                <div class="arrow up"></div>
+
+                <div class="layer layer-5" id="receiver-5" onclick="showLayerInfo(5, 'receiver')">
+                    <div class="layer-number">5</div>
+                    <div class="layer-name">Session Layer</div>
+                    <div class="layer-description">Session Handling</div>
+                    <div class="data-representation" id="receiver-data-5">
+                        <div class="data-unit">Data Unit: Data</div>
+                        <div>[Process Session Info]</div>
+                    </div>
+                </div>
+
+                <div class="arrow up"></div>
+
+                <div class="layer layer-6" id="receiver-6" onclick="showLayerInfo(6, 'receiver')">
+                    <div class="layer-number">6</div>
+                    <div class="layer-name">Presentation Layer</div>
+                    <div class="layer-description">Decryption, Decompression</div>
+                    <div class="data-representation" id="receiver-data-6">
+                        <div class="data-unit">Data Unit: Data</div>
+                        <div>[Decrypt/Decompress]</div>
+                    </div>
+                </div>
+
+                <div class="arrow up"></div>
+
+                <div class="layer layer-7" id="receiver-7" onclick="showLayerInfo(7, 'receiver')">
+                    <div class="layer-number">7</div>
+                    <div class="layer-name">Application Layer</div>
+                    <div class="layer-description">Application Processing</div>
+                    <div class="data-representation" id="receiver-data-7">
+                        <div class="data-unit">Data Unit: Data</div>
+                        <div>Web Server Processes HTTP Request</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel" id="infoPanel">
+            <div class="info-title">Click on any layer to learn more!</div>
+            <div id="infoContent">
+                Select a layer above to see detailed information about its role in the data flow process.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let isAnimating = false;
+        let animationTimeout;
+
+        const layerInfo = {
+            7: {
+                name: "Application Layer",
+                sender: "Creates the original data (HTTP request, email, file). This is where user applications interface with the network.",
+                receiver: "Receives and processes the final data. Web servers, email clients, and other applications operate here.",
+                protocols: ["HTTP/HTTPS", "SMTP", "FTP", "DNS", "DHCP", "Telnet", "SSH"],
+                examples: "Web browsing, sending emails, file transfers, video streaming"
+            },
+            6: {
+                name: "Presentation Layer", 
+                sender: "Handles data formatting, encryption, and compression before transmission.",
+                receiver: "Decrypts, decompresses, and formats data for the application layer.",
+                protocols: ["SSL/TLS", "JPEG", "GIF", "MPEG", "ASCII", "EBCDIC"],
+                examples: "SSL encryption, image compression, character encoding"
+            },
+            5: {
+                name: "Session Layer",
+                sender: "Establishes, manages, and terminates sessions between applications.",
+                receiver: "Manages session state and handles session control messages.",
+                protocols: ["NetBIOS", "PPTP", "RPC", "SQL Sessions"],
+                examples: "Login sessions, database connections, video conferencing"
+            },
+            4: {
+                name: "Transport Layer",
+                sender: "Adds TCP/UDP headers with source and destination port numbers. Ensures reliable delivery.",
+                receiver: "Removes transport headers and delivers data to the correct application port.",
+                protocols: ["TCP", "UDP", "SCTP"],
+                examples: "Web traffic (port 80/443), email (port 25), DNS (port 53)"
+            },
+            3: {
+                name: "Network Layer",
+                sender: "Adds IP headers with source and destination IP addresses. Determines the best path to destination.",
+                receiver: "Removes IP headers and checks if the packet is destined for this device.",
+                protocols: ["IP", "ICMP", "ARP", "OSPF", "BGP"],
+                examples: "Internet routing, IP addressing, packet forwarding"
+            },
+            2: {
+                name: "Data Link Layer",
+                sender: "Adds Ethernet headers with MAC addresses and error-checking frame check sequence (FCS).",
+                receiver: "Removes Ethernet headers, checks for errors, and verifies MAC address.",
+                protocols: ["Ethernet", "Wi-Fi", "PPP", "Frame Relay"],
+                examples: "Switch forwarding, VLAN tagging, error detection"
+            },
+            1: {
+                name: "Physical Layer",
+                sender: "Converts digital data into electrical, optical, or radio signals for transmission.",
+                receiver: "Converts received signals back into digital bits.",
+                protocols: ["Ethernet cables", "Fiber optic", "Wi-Fi radio", "Bluetooth"],
+                examples: "Cable transmission, wireless signals, hub operations"
+            }
+        };
+
+        function startAnimation() {
+            if (isAnimating) return;
+            
+            resetAnimation();
+            isAnimating = true;
+            currentStep = 0;
+            
+            animateStep();
+        }
+
+        function animateStep() {
+            if (currentStep >= 14) {
+                isAnimating = false;
+                return;
+            }
+
+            // Clear previous active states
+            document.querySelectorAll('.layer').forEach(layer => {
+                layer.classList.remove('active');
+            });
+
+            let progress = ((currentStep + 1) / 14) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            if (currentStep < 7) {
+                // Sender side animation (encapsulation)
+                let layer = 7 - currentStep;
+                let element = document.getElementById(`sender-${layer}`);
+                element.classList.add('active');
+                
+                if (currentStep > 0) {
+                    let prevLayer = 7 - (currentStep - 1);
+                    document.getElementById(`sender-${prevLayer}`).classList.add('processed');
+                }
+            } else {
+                // Network transmission and receiver side (decapsulation)
+                if (currentStep === 7) {
+                    // Highlight network transmission
+                    document.getElementById('networkWire').style.background = 
+                        'linear-gradient(90deg, #f39c12, #e67e22)';
+                    document.getElementById('transmissionIndicator').innerHTML = '⚡';
+                } else {
+                    // Receiver side
+                    let layer = currentStep - 7;
+                    let element = document.getElementById(`receiver-${layer}`);
+                    element.classList.add('active');
+                    
+                    if (currentStep > 8) {
+                        let prevLayer = currentStep - 8;
+                        document.getElementById(`receiver-${prevLayer}`).classList.add('processed');
+                    }
+                }
+            }
+
+            currentStep++;
+            animationTimeout = setTimeout(animateStep, 1500);
+        }
+
+        function stepThrough() {
+            if (isAnimating) {
+                clearTimeout(animationTimeout);
+                isAnimating = false;
+            } else {
+                animateStep();
+            }
+        }
+
+        function resetAnimation() {
+            clearTimeout(animationTimeout);
+            isAnimating = false;
+            currentStep = 0;
+            
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('networkWire').style.background = 
+                'linear-gradient(90deg, #34495e, #2c3e50)';
+            document.getElementById('transmissionIndicator').innerHTML = '📡';
+            
+            document.querySelectorAll('.layer').forEach(layer => {
+                layer.classList.remove('active', 'processed');
+            });
+        }
+
+        function showLayerInfo(layerNum, side) {
+            const info = layerInfo[layerNum];
+            const content = `
+                <div class="info-title">Layer ${layerNum}: ${info.name}</div>
+                <div style="margin: 15px 0;">
+                    <strong>${side === 'sender' ? 'Encapsulation' : 'Decapsulation'} Process:</strong><br>
+                    ${side === 'sender' ? info.sender : info.receiver}
+                </div>
+                <div style="margin: 15px 0;">
+                    <strong>Common Protocols:</strong><br>
+                    ${info.protocols.join(', ')}
+                </div>
+                <div style="margin: 15px 0;">
+                    <strong>Real-world Examples:</strong><br>
+                    ${info.examples}
+                </div>
+            `;
+            
+            document.getElementById('infoContent').innerHTML = content;
+            
+            // Highlight clicked layer
+            document.querySelectorAll('.layer').forEach(layer => {
+                layer.style.border = '3px solid transparent';
+            });
+            document.getElementById(`${side}-${layerNum}`).style.border = '3px solid #f39c12';
+        }
+
+        // Add hover effects for better interactivity
+        document.querySelectorAll('.layer').forEach(layer => {
+            layer.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('active')) {
+                    this.style.transform = 'scale(1.02)';
+                }
+            });
+            
+            layer.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('active')) {
+                    this.style.transform = 'scale(1)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
